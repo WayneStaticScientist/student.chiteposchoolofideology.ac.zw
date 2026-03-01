@@ -1,15 +1,12 @@
 "use client";
 import clsx from "clsx";
-
-import { Metadata, Viewport } from "next";
 import { Providers } from "../providers";
-
-import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import AiChat from "@/components/layouts/ai-chat";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SideBar from "@/components/layouts/side-bar";
 import AppBar from "@/components/layouts/app-bar";
+import { usePathname } from "next/navigation";
 
 export default function RootLayout({
   children,
@@ -18,6 +15,7 @@ export default function RootLayout({
 }) {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
   return (
     <html suppressHydrationWarning lang="en">
       <head />
