@@ -1,12 +1,8 @@
 "use client";
-import clsx from "clsx";
-import { Providers } from "../providers";
-import { fontSans } from "@/config/fonts";
 import AiChat from "@/components/layouts/ai-chat";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import SideBar from "@/components/layouts/side-bar";
 import AppBar from "@/components/layouts/app-bar";
-import { usePathname } from "next/navigation";
 
 export default function RootLayout({
   children,
@@ -17,44 +13,32 @@ export default function RootLayout({
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   return (
-    <html suppressHydrationWarning lang="en">
-      <head />
-      <body
-        className={clsx(
-          "min-h-screen text-foreground bg-background font-sans antialiased",
-          fontSans.variable,
-        )}
-      >
-        <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
-          <div className="flex h-screen w-full bg-slate-50 overflow-hidden font-sans text-slate-800">
-            {/* --- MOBILE SIDEBAR OVERLAY --- */}
-            {isMobileSidebarOpen && (
-              <div
-                className="fixed inset-0 bg-slate-900/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
-                onClick={() => setIsMobileSidebarOpen(false)}
-              />
-            )}
+    <div className="flex h-screen w-full bg-slate-50 overflow-hidden font-sans text-slate-800">
+      {/* --- MOBILE SIDEBAR OVERLAY --- */}
+      {isMobileSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
 
-            {/* --- SIDEBAR --- */}
-            <SideBar
-              isSidebarExpanded={isSidebarExpanded}
-              setIsSidebarExpanded={setIsSidebarExpanded}
-              isMobileSidebarOpen={isMobileSidebarOpen}
-              setIsMobileSidebarOpen={setIsMobileSidebarOpen}
-            />
-            {/* --- MAIN CONTENT AREA --- */}
-            <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-              {/* Header */}
-              <AppBar setIsMobileSidebarOpen={setIsMobileSidebarOpen} />
-              {/* Dashboard Content */}
-              {children}
-            </main>
+      {/* --- SIDEBAR --- */}
+      <SideBar
+        isSidebarExpanded={isSidebarExpanded}
+        setIsSidebarExpanded={setIsSidebarExpanded}
+        isMobileSidebarOpen={isMobileSidebarOpen}
+        setIsMobileSidebarOpen={setIsMobileSidebarOpen}
+      />
+      {/* --- MAIN CONTENT AREA --- */}
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative ">
+        {/* Header */}
+        <AppBar setIsMobileSidebarOpen={setIsMobileSidebarOpen} />
+        {/* Dashboard Content */}
+        {children}
+      </main>
 
-            {/* --- FLOATING AI CHAT --- */}
-            <AiChat />
-          </div>
-        </Providers>
-      </body>
-    </html>
+      {/* --- FLOATING AI CHAT --- */}
+      <AiChat />
+    </div>
   );
 }
