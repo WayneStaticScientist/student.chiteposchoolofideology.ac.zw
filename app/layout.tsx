@@ -3,7 +3,13 @@ import "@/styles/globals.css";
 
 import { Providers } from "./providers";
 import { fontSans } from "@/config/fonts";
-
+import { Metadata } from "next";
+export const metadata: Metadata = {
+  title: {
+    absolute: "Chitepo School of Ideology",
+    template: "Chitepo | %",
+  },
+};
 export default function RootLayout({
   children,
 }: {

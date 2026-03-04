@@ -25,7 +25,7 @@ export default function GradesView() {
         {
           id: 1,
           code: "MATH 301",
-          title: "Advanced Mathematics",
+          title: "National Defense And Security Policy",
           credits: 4,
           score: 95,
           grade: "A",
@@ -34,7 +34,7 @@ export default function GradesView() {
         {
           id: 2,
           code: "CS 101",
-          title: "Computer Science Foundations",
+          title: "Part Governancy",
           credits: 4,
           score: 91,
           grade: "A-",
@@ -43,7 +43,7 @@ export default function GradesView() {
         {
           id: 3,
           code: "HIST 205",
-          title: "Modern World History",
+          title: "Emerging Trends on the Geo-Political Landscape",
           credits: 3,
           score: 84,
           grade: "B",
@@ -52,7 +52,7 @@ export default function GradesView() {
         {
           id: 4,
           code: "CHEM 102",
-          title: "Organic Chemistry",
+          title: "National Ideology",
           credits: 3,
           score: 89,
           grade: "B+",
@@ -61,7 +61,7 @@ export default function GradesView() {
         {
           id: 5,
           code: "PE 101",
-          title: "Physical Education",
+          title: "National Heritage",
           credits: 2,
           score: 98,
           grade: "A+",

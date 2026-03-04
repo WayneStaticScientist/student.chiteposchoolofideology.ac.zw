@@ -26,7 +26,7 @@ export default function App() {
       id: 1,
       time: "09:00 AM",
       endTime: "10:30 AM",
-      title: "Advanced Mathematics",
+      title: "National Defense And Security Policy",
       type: "Lecture",
       location: "Room 302",
       instructor: "Dr. Sarah Connor",
@@ -37,7 +37,7 @@ export default function App() {
       id: 2,
       time: "11:00 AM",
       endTime: "12:30 PM",
-      title: "Computer Science 101",
+      title: "Part Governancy",
       type: "Lab",
       location: "Lab 4",
       instructor: "Prof. Alan Turing",
@@ -48,7 +48,7 @@ export default function App() {
       id: 3,
       time: "01:00 PM",
       endTime: "02:00 PM",
-      title: "Tech Club Meetup",
+      title: "Meetup",
       type: "Event",
       location: "Student Union",
       instructor: "Organized by Tech Soc",
@@ -59,7 +59,7 @@ export default function App() {
       id: 4,
       time: "03:00 PM",
       endTime: "04:30 PM",
-      title: "Organic Chemistry",
+      title: "National Ideology",
       type: "Lecture",
       location: "Science Block A",
       instructor: "Dr. Walter White",
@@ -70,7 +70,7 @@ export default function App() {
       id: 5,
       time: "05:00 PM",
       endTime: "05:00 PM",
-      title: "History Essay Draft Due",
+      title: "National Heritage",
       type: "Deadline",
       location: "Online Portal",
       instructor: "Submit via Canvas",
@@ -81,7 +81,7 @@ export default function App() {
       id: 6,
       time: "07:00 PM",
       endTime: "08:30 PM",
-      title: "Guest Lecture: AI Ethics",
+      title: "Protocol",
       type: "Webinar",
       location: "Zoom Link",
       instructor: "Dr. Elena Rostova",
@@ -324,7 +324,7 @@ export default function App() {
                   <span className="font-bold text-lg text-rose-300">3</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-indigo-100">Club Meetings</span>
+                  <span className="text-indigo-100">Meetings</span>
                   <span className="font-bold text-lg text-emerald-300">2</span>
                 </div>
               </div>

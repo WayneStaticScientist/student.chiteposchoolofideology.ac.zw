@@ -23,8 +23,8 @@ export default function CourseView() {
     {
       id: 1,
       code: "MATH 301",
-      title: "Advanced Mathematics",
-      instructor: "Dr. Sarah Connor",
+      title: "National Defense And Security Policy",
+      instructor: "",
       progress: 75,
       theme: "emerald",
       icon: Calculator,
@@ -34,8 +34,8 @@ export default function CourseView() {
     {
       id: 2,
       code: "CS 101",
-      title: "Computer Science Foundations",
-      instructor: "Prof. Alan Turing",
+      title: "Part Governancy",
+      instructor: "",
       progress: 42,
       theme: "indigo",
       icon: Code,
@@ -45,8 +45,8 @@ export default function CourseView() {
     {
       id: 3,
       code: "HIST 205",
-      title: "Modern World History",
-      instructor: "Dr. James Miller",
+      title: "Emerging Trends on the Geo-Political Landscape",
+      instructor: "",
       progress: 90,
       theme: "amber",
       icon: Globe,
@@ -56,8 +56,8 @@ export default function CourseView() {
     {
       id: 4,
       code: "CHEM 102",
-      title: "Organic Chemistry",
-      instructor: "Dr. Walter White",
+      title: "National Ideology",
+      instructor: "",
       progress: 15,
       theme: "rose",
       icon: FlaskConical,
@@ -67,8 +67,8 @@ export default function CourseView() {
     {
       id: 5,
       code: "ENG 404",
-      title: "Creative Writing",
-      instructor: "Prof. Jane Austen",
+      title: "National Heritage",
+      instructor: "",
       progress: 60,
       theme: "violet",
       icon: BookOpen,
@@ -157,11 +157,10 @@ export default function CourseView() {
               Quiz Due Today
             </div>
             <h2 className="text-2xl font-bold mb-2">
-              CS 101: Midterm Assessment
+              Emerging Trends on the Geo-Political Landscape
             </h2>
             <p className="text-indigo-200 max-w-lg">
-              Test your knowledge on data structures and algorithms. Estimated
-              time: 45 minutes.
+              Estimated time: 45 minutes.
             </p>
           </div>
           <button className="relative z-10 whitespace-nowrap px-6 py-3 rounded-xl bg-white text-indigo-800 font-bold hover:bg-indigo-50 hover:shadow-md transition-all">

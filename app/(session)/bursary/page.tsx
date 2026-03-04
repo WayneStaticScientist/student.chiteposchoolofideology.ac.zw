@@ -49,14 +49,6 @@ export default function App() {
       status: "Successful",
       type: "Registration Fee",
     },
-    {
-      id: "PAY-66012",
-      date: "Nov 20, 2025",
-      method: "Credit Card",
-      amount: 250.0,
-      status: "Successful",
-      type: "Library & Lab Fee",
-    },
   ];
 
   return (

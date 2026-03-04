@@ -6,19 +6,19 @@ export default function App() {
   const schedule = [
     {
       time: "09:00 AM",
-      course: "Advanced Mathematics",
+      course: "National Defense And Security Policy",
       room: "Room 302",
       type: "Lecture",
     },
     {
       time: "11:30 AM",
-      course: "Computer Science 101",
+      course: "Part Governancy",
       room: "Lab 4",
       type: "Lab",
     },
     {
       time: "02:00 PM",
-      course: "Modern World History",
+      course: "National Ideology",
       room: "Hall B",
       type: "Seminar",
     },
@@ -120,7 +120,9 @@ export default function App() {
                 <p className="text-xs text-emerald-200 font-medium mb-1">
                   Tomorrow, 11:59 PM
                 </p>
-                <h4 className="font-semibold mb-2">CS101: Project Phase 2</h4>
+                <h4 className="font-semibold mb-2">
+                  Emerging Trends on the Geo-Political Landscape
+                </h4>
                 <div className="w-full bg-white/20 rounded-full h-1.5">
                   <div className="bg-emerald-300 h-1.5 rounded-full w-[80%]"></div>
                 </div>
@@ -129,7 +131,9 @@ export default function App() {
                 <p className="text-xs text-emerald-200 font-medium mb-1">
                   Friday, 05:00 PM
                 </p>
-                <h4 className="font-semibold mb-2">History Essay Submission</h4>
+                <h4 className="font-semibold mb-2">
+                  Emerging Trends on the Geo-Political Landscape
+                </h4>
                 <div className="w-full bg-white/20 rounded-full h-1.5">
                   <div className="bg-rose-400 h-1.5 rounded-full w-[30%]"></div>
                 </div>

@@ -10,6 +10,7 @@ import {
   Settings,
   X,
 } from "lucide-react";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import React from "react";
 
@@ -44,8 +45,13 @@ export default function SideBar({
         {/* Sidebar Header */}
         <div className="flex items-center justify-between h-20 px-4 border-b border-emerald-800/50">
           <div className="flex items-center gap-3 overflow-hidden whitespace-nowrap">
-            <div className="bg-emerald-500 text-white p-2 rounded-xl flex-shrink-0 shadow-lg shadow-emerald-500/30">
-              <GraduationCap size={24} />
+            <div className="bg-white text-white p-2 rounded-xl flex-shrink-0 shadow-lg shadow-emerald-500/30">
+              <Image
+                src={"/apple-touch-icon.png"}
+                width={30}
+                height={30}
+                alt={"logo"}
+              />
             </div>
             {isSidebarExpanded && (
               <span className="font-bold text-xl tracking-wide">Chitepo</span>

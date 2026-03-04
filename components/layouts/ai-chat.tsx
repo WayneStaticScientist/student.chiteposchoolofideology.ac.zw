@@ -1,8 +1,10 @@
 "use client";
+import { ImSpinner3 } from "react-icons/im";
 import { aiChat } from "@/stores/ai-chat-store";
 import { MessageSquare, Send, Sparkles, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import MarkdownPreview from "@uiw/react-markdown-preview";
+import Image from "next/image";
 export default function AiChat() {
   const ai = aiChat();
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -34,8 +36,13 @@ export default function AiChat() {
           {/* Chat Header */}
           <div className="bg-emerald-600 p-4 text-white flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                <Sparkles size={16} className="text-emerald-100" />
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center backdrop-blur-sm">
+                <Image
+                  src={"/apple-touch-icon.png"}
+                  alt={"Van"}
+                  width={16}
+                  height={16}
+                />
               </div>
               <div>
                 <h3 className="font-semibold text-sm">The Vanguard</h3>
@@ -67,7 +74,9 @@ export default function AiChat() {
                   }`}
                 >
                   {msg.isLoading ? (
-                    "syncing response"
+                    <span className="flex items-center gap-3">
+                      <ImSpinner3 className=" animate-spin" /> syncing response
+                    </span>
                   ) : (
                     <div className="whitespace-pre-wrap break-words">
                       <MarkdownPreview
@@ -96,7 +105,7 @@ export default function AiChat() {
               type="text"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Ask about courses, grades..."
+              placeholder="Ask anything..."
               className="flex-1 bg-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
             />
             <button
