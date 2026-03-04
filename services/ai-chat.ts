@@ -36,7 +36,7 @@ export async function* sendMessageStream(
 
   // 3. Make the Axios request
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_NYIKA_API}/user/chat/ai-stream`,
+    `${process.env.NEXT_PUBLIC_NYIKA_API}/user/chat/ai-stream-van`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
