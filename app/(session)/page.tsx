@@ -12,7 +12,7 @@ export default function App() {
     },
     {
       time: "11:30 AM",
-      course: "Part Governancy",
+      course: "PartyGovernancy",
       room: "Lab 4",
       type: "Lab",
     },

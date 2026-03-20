@@ -34,7 +34,7 @@ export default function CourseView() {
     {
       id: 2,
       code: "CS 101",
-      title: "Part Governancy",
+      title: "PartyGovernancy",
       instructor: "",
       progress: 42,
       theme: "indigo",

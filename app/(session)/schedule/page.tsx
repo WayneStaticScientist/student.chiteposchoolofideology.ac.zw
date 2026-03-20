@@ -37,7 +37,7 @@ export default function App() {
       id: 2,
       time: "11:00 AM",
       endTime: "12:30 PM",
-      title: "Part Governancy",
+      title: "PartyGovernancy",
       type: "Lab",
       location: "Lab 4",
       instructor: "Prof. Alan Turing",
