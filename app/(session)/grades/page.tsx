@@ -34,7 +34,7 @@ export default function GradesView() {
         {
           id: 2,
           code: "CS 101",
-          title: "PartyGovernancy",
+          title: "Party Governancy",
           credits: 4,
           score: 91,
           grade: "A-",
