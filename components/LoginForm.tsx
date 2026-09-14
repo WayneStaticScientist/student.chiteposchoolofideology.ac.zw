@@ -15,6 +15,8 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export const LoginForm = () => {
+  const [loginError, setLoginError] = React.useState<string | null>(null);
+
   const {
     control,
     handleSubmit,
@@ -29,6 +31,7 @@ export const LoginForm = () => {
 
   const onSubmit = async (data: FormData, e?: React.BaseSyntheticEvent) => {
     e?.preventDefault();
+    setLoginError(null);
     try {
       await loginUser(data);
       window.location.href = "/";
@@ -39,7 +42,7 @@ export const LoginForm = () => {
         error.message ||
         "Login failed. Please check your credentials.";
 
-      alert(errorMessage);
+      setLoginError(errorMessage);
     }
   };
 
@@ -106,6 +109,12 @@ export const LoginForm = () => {
               </span>
             )}
           </div>
+
+          {loginError && (
+            <div className="text-sm font-medium text-secondary bg-secondary/10 p-3 rounded-xl border border-secondary/20 text-center">
+              {loginError}
+            </div>
+          )}
 
           <button
             className="mt-4 py-3 px-6 rounded-xl font-bold text-white bg-primary shadow-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
