@@ -7,12 +7,15 @@ import {
   FileText,
   GraduationCap,
   Home,
+  LogOut,
   Settings,
   X,
 } from "lucide-react";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import React from "react";
+
+import { logout } from "@/services/api";
 
 export default function SideBar({
   isSidebarExpanded,
@@ -25,15 +28,26 @@ export default function SideBar({
   setIsSidebarExpanded: (state: boolean) => void;
   setIsMobileSidebarOpen: (state: boolean) => void;
 }) {
+  const router = useRouter();
   const navItems = [
     { icon: Home, label: "Dashboard", path: "/" },
     { icon: BookOpen, label: "Courses", path: "/courses" },
     { icon: GraduationCap, label: "Grades", path: "/grades" },
-    { icon: Calendar, label: "Schedule", path: "/schedule" },
+    { icon: Calendar, label: "Schedules", path: "/schedules" },
     { icon: FileText, label: "Bursary", path: "/bursary" },
-    { icon: Settings, label: "Settings", path: "/settings" },
   ];
   const path = usePathname();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout failed", error);
+      router.push("/login");
+    }
+  };
+
   return (
     <>
       <aside
@@ -47,10 +61,10 @@ export default function SideBar({
           <div className="flex items-center gap-3 overflow-hidden whitespace-nowrap">
             <div className="bg-white text-white p-2 rounded-xl flex-shrink-0 shadow-lg shadow-emerald-500/30">
               <Image
+                alt={"logo"}
+                height={30}
                 src={"/apple-touch-icon.png"}
                 width={30}
-                height={30}
-                alt={"logo"}
               />
             </div>
             {isSidebarExpanded && (
@@ -74,10 +88,6 @@ export default function SideBar({
 
             return (
               <button
-                onClick={() => {
-                  if (item.path == path) return;
-                  window.location.href = item.path;
-                }}
                 key={index}
                 className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 group relative
                 ${
@@ -87,10 +97,14 @@ export default function SideBar({
                 }
               `}
                 title={!isSidebarExpanded ? item.label : ""}
+                onClick={() => {
+                  if (item.path == path) return;
+                  window.location.href = item.path;
+                }}
               >
                 <item.icon
-                  size={22}
                   className={`flex-shrink-0 ${active ? "text-emerald-400" : ""}`}
+                  size={22}
                 />
 
                 {/* Desktop Expanded / Mobile Label */}
@@ -109,13 +123,55 @@ export default function SideBar({
               </button>
             );
           })}
+          {/* Settings & Logout */}
+          <div className="mt-auto pt-4 border-t border-emerald-800/50 flex flex-col gap-2">
+            <button
+              className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 group relative
+                ${path === "/settings" ? "bg-emerald-800 text-white shadow-md" : "text-emerald-300 hover:bg-emerald-900/50 hover:text-emerald-50"}
+              `}
+              title={!isSidebarExpanded ? "Settings" : ""}
+              onClick={() => router.push("/settings")}
+            >
+              <Settings
+                className={`flex-shrink-0 ${path === "/settings" ? "text-emerald-400" : ""}`}
+                size={22}
+              />
+              <span
+                className={`whitespace-nowrap transition-opacity duration-300 ${!isSidebarExpanded ? "lg:opacity-0 lg:w-0 lg:hidden" : "opacity-100"}`}
+              >
+                Settings
+              </span>
+              {!isSidebarExpanded && (
+                <div className="absolute left-full ml-4 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 lg:block hidden shadow-xl">
+                  Settings
+                </div>
+              )}
+            </button>
+            <button
+              className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 group relative text-emerald-300 hover:bg-emerald-900/50 hover:text-rose-400`}
+              title={!isSidebarExpanded ? "Log Out" : ""}
+              onClick={handleLogout}
+            >
+              <LogOut className="flex-shrink-0" size={22} />
+              <span
+                className={`whitespace-nowrap transition-opacity duration-300 ${!isSidebarExpanded ? "lg:opacity-0 lg:w-0 lg:hidden" : "opacity-100"}`}
+              >
+                Log Out
+              </span>
+              {!isSidebarExpanded && (
+                <div className="absolute left-full ml-4 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 lg:block hidden shadow-xl">
+                  Log Out
+                </div>
+              )}
+            </button>
+          </div>
         </nav>
 
         {/* Sidebar Footer / Desktop Toggle */}
         <div className="p-4 border-t border-emerald-800/50 hidden lg:flex justify-end">
           <button
-            onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
             className="p-2 rounded-lg text-emerald-300 hover:bg-emerald-800 hover:text-white transition-colors flex items-center justify-center w-full"
+            onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
           >
             {isSidebarExpanded ? (
               <div className="flex items-center gap-2 text-sm w-full justify-center">

@@ -1,12 +1,56 @@
 @import "tailwindcss";
 
-@plugin '../hero.ts';
-
-@source '../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}';
-
-@custom-variant dark (&:is(.dark *));
-
 @theme {
     --font-sans: "font", sans-serif;
     --font-mono: "monospace", monospace;
+    
+    /* Zimbabwean flag inspired theme colors */
+    --color-primary: #008A2E; /* Emerald Green */
+    --color-secondary: #FF0000; /* Red */
+}
+
+/* Form input defaults */
+input, select, textarea {
+    color: #111827;
+}
+
+/* Phone input container and field styling */
+.PhoneInput {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.PhoneInputCountry {
+    display: flex;
+    align-items: center;
+    margin-right: 0.75rem;
+}
+
+.PhoneInputCountrySelect {
+    cursor: pointer;
+}
+
+.PhoneInputCountryIcon {
+    width: 1.5rem;
+    height: 1.125rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.PhoneInputInput {
+    flex: 1 1 auto;
+    width: 100% !important;
+    min-width: 0 !important;
+    background-color: transparent !important;
+    border: none !important;
+    outline: none !important;
+    color: #111827 !important;
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+    padding: 0 !important;
+}
+
+.PhoneInputInput:focus {
+    outline: none !important;
+    box-shadow: none !important;
 }

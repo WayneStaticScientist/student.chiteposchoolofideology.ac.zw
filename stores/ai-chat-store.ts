@@ -1,6 +1,7 @@
-import { sendMessageStream } from "@/services/ai-chat";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
+
+import { sendMessageStream } from "@/services/ai-chat";
 
 export const aiChat = create<{
   aiChats: AiMessageModel[];
@@ -24,6 +25,7 @@ export const aiChat = create<{
       try {
         // 3. Start the stream (using the function we converted earlier)
         const stream = sendMessageStream(message, get().aiChats);
+
         for await (const chunk of stream) {
           set((state) => {
             state.aiChats[aiMessageIndex].message += chunk.replaceAll(

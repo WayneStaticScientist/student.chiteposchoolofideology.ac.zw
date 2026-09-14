@@ -1,58 +1,321 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Wallet,
   Receipt,
   History,
-  Download,
   ArrowUpRight,
   CreditCard,
   DollarSign,
   AlertCircle,
   CheckCircle2,
-  FileText,
+  Loader2,
+  X,
+  Smartphone,
+  Globe,
 } from "lucide-react";
+import { toast } from "react-hot-toast";
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState("overview");
+import {
+  getPaymentHistory,
+  initiatePayment,
+  checkPaymentStatus,
+} from "@/services/api";
 
-  // Mock financial data
-  const financialSummary = {
-    totalFees: 4500.0,
-    paidAmount: 3200.0,
-    balance: 1300.0,
-    dueDate: "March 15, 2026",
+export default function BursaryPage() {
+  const [financials, setFinancials] = useState({
+    totalBilled: 0,
+    totalPaid: 0,
+  });
+  const [history, setHistory] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Payment Modal State
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [amount, setAmount] = useState<number | "">("");
+  const [method, setMethod] = useState<"ecocash" | "onemoney" | "paynow">(
+    "paynow",
+  );
+  const [phone, setPhone] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentResult, setPaymentResult] = useState<any>(null);
+
+  const fetchFinancials = async () => {
+    try {
+      setIsLoading(true);
+      const res = await getPaymentHistory();
+
+      setFinancials(res.financials);
+      setHistory(res.history);
+    } catch (error) {
+      toast.error("Failed to load financial data");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const paymentHistory = [
-    {
-      id: "PAY-99281",
-      date: "Feb 12, 2026",
-      method: "Credit Card",
-      amount: 1200.0,
-      status: "Successful",
-      type: "Tuition Fee",
-    },
-    {
-      id: "PAY-88210",
-      date: "Jan 05, 2026",
-      method: "Bank Transfer",
-      amount: 1500.0,
-      status: "Successful",
-      type: "Tuition Fee",
-    },
-    {
-      id: "PAY-77123",
-      date: "Dec 15, 2025",
-      method: "Online Portal",
-      amount: 500.0,
-      status: "Successful",
-      type: "Registration Fee",
-    },
-  ];
+  useEffect(() => {
+    fetchFinancials();
+  }, []);
+
+  // Polling for payment status
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (
+      paymentResult?.paymentId &&
+      paymentResult?.status !== "paid" &&
+      paymentResult?.status !== "failed"
+    ) {
+      interval = setInterval(async () => {
+        try {
+          const res = await checkPaymentStatus(paymentResult.paymentId);
+
+          if (res.status === "paid" || res.status === "failed") {
+            setPaymentResult((prev: any) => ({ ...prev, status: res.status }));
+            clearInterval(interval);
+            if (res.status === "paid") {
+              toast.success("Payment Successful!");
+              setIsPaymentModalOpen(false);
+              fetchFinancials();
+            } else {
+              toast.error("Payment Failed or Cancelled.");
+            }
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      }, 5000);
+    }
+
+    return () => clearInterval(interval);
+  }, [paymentResult]);
+
+  const handlePaymentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!amount || amount <= 0) return toast.error("Enter a valid amount");
+    if ((method === "ecocash" || method === "onemoney") && !phone) {
+      return toast.error("Phone number is required for mobile payments");
+    }
+
+    try {
+      setIsProcessing(true);
+      const res = await initiatePayment({
+        amount: Number(amount),
+        method,
+        phone: method !== "paynow" ? phone : undefined,
+      });
+
+      if (res.redirectUrl) {
+        // Redirect to Paynow Web
+        window.open(res.redirectUrl, "_blank");
+      }
+
+      setPaymentResult({
+        ...res,
+        status: "pending",
+      });
+      toast.success("Payment initiated successfully");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.error || "Failed to initiate payment");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex justify-center items-center h-screen bg-slate-50">
+        <Loader2 className="text-emerald-500 animate-spin" size={40} />
+      </div>
+    );
+  }
+
+  const balance = Math.max(0, financials.totalBilled - financials.totalPaid);
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 lg:p-10 scroll-smooth bg-slate-50/50 min-h-screen">
+    <div className="flex-1 overflow-y-auto p-6 lg:p-10 scroll-smooth bg-slate-50/50 h-full pb-32 relative">
+      {/* Payment Modal */}
+      {isPaymentModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-md shadow-2xl relative">
+            <button
+              className="absolute top-4 right-4 p-2 text-slate-400 hover:bg-slate-100 rounded-full transition-colors"
+              onClick={() => {
+                setIsPaymentModalOpen(false);
+                setPaymentResult(null);
+                setAmount("");
+              }}
+            >
+              <X size={20} />
+            </button>
+            <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+              <CreditCard className="text-emerald-500" /> Make a Payment
+            </h2>
+
+            {paymentResult ? (
+              <div className="text-center space-y-4">
+                {paymentResult.status === "pending" && (
+                  <>
+                    <div className="mx-auto w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mb-4">
+                      <Loader2 className="animate-spin" size={30} />
+                    </div>
+                    <h3 className="font-bold text-lg text-slate-800">
+                      Awaiting Payment
+                    </h3>
+                    {paymentResult.instructions ? (
+                      <p className="text-slate-500 text-sm bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        {paymentResult.instructions}
+                      </p>
+                    ) : (
+                      <p className="text-slate-500 text-sm">
+                        Please complete the payment in the new window. We are
+                        checking the status automatically...
+                      </p>
+                    )}
+                  </>
+                )}
+                {paymentResult.status === "paid" && (
+                  <>
+                    <div className="mx-auto w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mb-4">
+                      <CheckCircle2 size={30} />
+                    </div>
+                    <h3 className="font-bold text-lg text-slate-800">
+                      Payment Successful!
+                    </h3>
+                  </>
+                )}
+                {paymentResult.status === "failed" && (
+                  <>
+                    <div className="mx-auto w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mb-4">
+                      <AlertCircle size={30} />
+                    </div>
+                    <h3 className="font-bold text-lg text-slate-800">
+                      Payment Failed
+                    </h3>
+                    <p className="text-slate-500 text-sm">Please try again.</p>
+                  </>
+                )}
+              </div>
+            ) : (
+              <form className="space-y-5" onSubmit={handlePaymentSubmit}>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">
+                    Amount (ZWG / USD equivalent)
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <span className="text-slate-400 font-bold">$</span>
+                    </div>
+                    <input
+                      required
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-semibold"
+                      placeholder="0.00"
+                      step="0.01"
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-3">
+                    Payment Method
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <label
+                      className={`cursor-pointer border p-3 rounded-xl flex items-center gap-2 transition-all ${
+                        method === "paynow"
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                          : "border-slate-200 hover:bg-slate-50 text-slate-600"
+                      }`}
+                    >
+                      <input
+                        checked={method === "paynow"}
+                        className="hidden"
+                        name="method"
+                        type="radio"
+                        value="paynow"
+                        onChange={() => setMethod("paynow")}
+                      />
+                      <Globe size={18} />
+                      <span className="font-bold text-sm">
+                        Visa / Innbucks / Mastercard
+                      </span>
+                    </label>
+                    <label
+                      className={`cursor-pointer border p-3 rounded-xl flex items-center gap-2 transition-all ${
+                        method === "ecocash"
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                          : "border-slate-200 hover:bg-slate-50 text-slate-600"
+                      }`}
+                    >
+                      <input
+                        checked={method === "ecocash"}
+                        className="hidden"
+                        name="method"
+                        type="radio"
+                        value="ecocash"
+                        onChange={() => setMethod("ecocash")}
+                      />
+                      <Smartphone size={18} />
+                      <span className="font-bold text-sm">EcoCash</span>
+                    </label>
+                    <label
+                      className={`cursor-pointer border p-3 rounded-xl flex items-center gap-2 transition-all ${
+                        method === "onemoney"
+                          ? "border-emerald-500 bg-emerald-50 text-emerald-700"
+                          : "border-slate-200 hover:bg-slate-50 text-slate-600"
+                      }`}
+                    >
+                      <input
+                        checked={method === "onemoney"}
+                        className="hidden"
+                        name="method"
+                        type="radio"
+                        value="onemoney"
+                        onChange={() => setMethod("onemoney")}
+                      />
+                      <Smartphone size={18} />
+                      <span className="font-bold text-sm">OneMoney</span>
+                    </label>
+                  </div>
+                </div>
+
+                {method !== "paynow" && (
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">
+                      Phone Number
+                    </label>
+                    <input
+                      required
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-semibold"
+                      placeholder="077XXXXXXX"
+                      type="text"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                    />
+                  </div>
+                )}
+
+                <button
+                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-emerald-600/30 transition-all flex justify-center items-center gap-2 disabled:opacity-70"
+                  disabled={isProcessing}
+                  type="submit"
+                >
+                  {isProcessing ? (
+                    <Loader2 className="animate-spin" size={24} />
+                  ) : (
+                    "Initiate Payment"
+                  )}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -66,12 +329,12 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors shadow-sm font-medium">
+            <button
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors shadow-sm font-medium"
+              onClick={() => setIsPaymentModalOpen(true)}
+            >
               <CreditCard size={18} />
               <span>Make a Payment</span>
-            </button>
-            <button className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors shadow-sm">
-              <Download size={20} />
             </button>
           </div>
         </div>
@@ -84,10 +347,10 @@ export default function App() {
             </div>
             <div>
               <p className="text-sm font-medium text-slate-500 mb-1">
-                Total Semester Fees
+                Total Billed
               </p>
               <h3 className="text-2xl font-bold text-slate-800">
-                ${financialSummary.totalFees.toLocaleString()}
+                ${financials.totalBilled.toLocaleString()}
               </h3>
             </div>
           </div>
@@ -101,13 +364,13 @@ export default function App() {
                 Total Paid
               </p>
               <h3 className="text-2xl font-bold text-slate-800">
-                ${financialSummary.paidAmount.toLocaleString()}
+                ${financials.totalPaid.toLocaleString()}
               </h3>
             </div>
           </div>
 
           <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex items-center gap-5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-2 h-full bg-rose-400"></div>
+            <div className="absolute top-0 right-0 w-2 h-full bg-rose-400" />
             <div className="w-14 h-14 rounded-2xl bg-rose-100 flex items-center justify-center text-rose-600">
               <Wallet size={28} />
             </div>
@@ -116,7 +379,7 @@ export default function App() {
                 Remaining Balance
               </p>
               <h3 className="text-2xl font-bold text-slate-800">
-                ${financialSummary.balance.toLocaleString()}
+                ${balance.toLocaleString()}
               </h3>
             </div>
           </div>
@@ -133,59 +396,68 @@ export default function App() {
                   Payment History
                 </h2>
               </div>
-              <button className="text-sm font-medium text-emerald-600 hover:text-emerald-700">
-                View All
-              </button>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-slate-50/50 text-slate-400 text-xs font-bold uppercase tracking-wider">
-                    <th className="px-6 py-4">Transaction ID</th>
+                    <th className="px-6 py-4">Reference</th>
                     <th className="px-6 py-4">Date</th>
-                    <th className="px-6 py-4">Type</th>
                     <th className="px-6 py-4">Amount</th>
                     <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {paymentHistory.map((payment) => (
-                    <tr
-                      key={payment.id}
-                      className="hover:bg-slate-50/50 transition-colors group"
-                    >
-                      <td className="px-6 py-4 text-sm font-medium text-slate-600">
-                        {payment.id}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-500">
-                        {payment.date}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm font-semibold text-slate-700">
-                          {payment.type}
-                        </span>
-                        <p className="text-[10px] text-slate-400">
-                          {payment.method}
-                        </p>
-                      </td>
-                      <td className="px-6 py-4 text-sm font-bold text-slate-800">
-                        ${payment.amount.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 text-xs font-bold">
-                          <CheckCircle2 size={12} />
-                          {payment.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button className="p-2 text-slate-400 hover:text-emerald-600 transition-colors">
-                          <Download size={18} />
-                        </button>
+                  {history.length === 0 ? (
+                    <tr>
+                      <td
+                        className="px-6 py-10 text-center text-slate-500"
+                        colSpan={4}
+                      >
+                        No payments found.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    history.map((payment) => (
+                      <tr
+                        key={payment._id}
+                        className="hover:bg-slate-50/50 transition-colors group"
+                      >
+                        <td className="px-6 py-4 text-sm font-bold text-slate-700">
+                          {payment.reference}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-slate-500">
+                          {new Date(payment.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-bold text-slate-800">
+                          ${payment.amount.toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold ${
+                              payment.status === "paid"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : payment.status === "pending"
+                                  ? "bg-amber-100 text-amber-700"
+                                  : "bg-rose-100 text-rose-700"
+                            }`}
+                          >
+                            {payment.status === "paid" && (
+                              <CheckCircle2 size={12} />
+                            )}
+                            {payment.status === "pending" && (
+                              <Loader2 className="animate-spin" size={12} />
+                            )}
+                            {payment.status === "failed" && (
+                              <AlertCircle size={12} />
+                            )}
+                            {payment.status.toUpperCase()}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -194,25 +466,31 @@ export default function App() {
           {/* Sidebar Area */}
           <div className="space-y-6">
             {/* Payment Deadline Alert */}
-            <div className="bg-gradient-to-br from-rose-500 to-rose-600 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
-              <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl pointer-events-none"></div>
-              <div className="flex items-start gap-4 relative z-10">
-                <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl">
-                  <AlertCircle size={24} />
+            {balance > 0 && (
+              <div className="bg-gradient-to-br from-rose-500 to-rose-600 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden">
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white opacity-10 rounded-full blur-xl pointer-events-none" />
+                <div className="flex items-start gap-4 relative z-10">
+                  <div className="p-3 bg-white/20 backdrop-blur-md rounded-2xl">
+                    <AlertCircle size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">Outstanding Balance</h3>
+                    <p className="text-rose-100 text-sm mt-1">
+                      Your balance of{" "}
+                      <strong>${balance.toLocaleString()}</strong> needs to be
+                      settled to avoid service disruptions.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg">Next Deadline</h3>
-                  <p className="text-rose-100 text-sm mt-1">
-                    Your balance of <strong>$1,300</strong> is due by{" "}
-                    {financialSummary.dueDate}.
-                  </p>
-                </div>
+                <button
+                  className="mt-5 w-full py-3 bg-white text-rose-600 font-bold rounded-xl hover:bg-rose-50 transition-colors flex items-center justify-center gap-2 shadow-sm"
+                  onClick={() => setIsPaymentModalOpen(true)}
+                >
+                  Pay Balance Now
+                  <ArrowUpRight size={18} />
+                </button>
               </div>
-              <button className="mt-5 w-full py-3 bg-white text-rose-600 font-bold rounded-xl hover:bg-rose-50 transition-colors flex items-center justify-center gap-2 shadow-sm">
-                Pay Balance Now
-                <ArrowUpRight size={18} />
-              </button>
-            </div>
+            )}
 
             {/* Invoices & Documents */}
             <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
@@ -221,55 +499,10 @@ export default function App() {
                 Billing Documents
               </h3>
               <div className="space-y-3">
-                {[
-                  { name: "Sem 1 Statement", size: "1.2 MB", date: "Feb 01" },
-                  {
-                    name: "Fee Structure 2026",
-                    size: "450 KB",
-                    date: "Jan 15",
-                  },
-                  {
-                    name: "Scholarship Letter",
-                    size: "890 KB",
-                    date: "Jan 10",
-                  },
-                ].map((doc, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-3 rounded-2xl border border-slate-50 hover:border-indigo-100 hover:bg-indigo-50/30 transition-all group cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-slate-100 rounded-lg group-hover:bg-white group-hover:text-indigo-600 text-slate-400 transition-colors">
-                        <FileText size={18} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold text-slate-700">
-                          {doc.name}
-                        </p>
-                        <p className="text-[10px] text-slate-400 uppercase font-bold">
-                          {doc.date} • {doc.size}
-                        </p>
-                      </div>
-                    </div>
-                    <Download
-                      size={16}
-                      className="text-slate-300 group-hover:text-indigo-500"
-                    />
-                  </div>
-                ))}
+                <div className="p-4 text-center text-sm text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                  No billing documents available yet.
+                </div>
               </div>
-            </div>
-
-            {/* Quick Support */}
-            <div className="bg-slate-800 rounded-3xl p-6 text-white shadow-sm">
-              <h3 className="font-bold mb-2">Need Financial Help?</h3>
-              <p className="text-slate-400 text-sm mb-4">
-                Contact the bursar's office for payment plans or scholarship
-                inquiries.
-              </p>
-              <button className="w-full py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-xl transition-colors">
-                Contact Office
-              </button>
             </div>
           </div>
         </div>

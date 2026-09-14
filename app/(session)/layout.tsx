@@ -1,6 +1,7 @@
 "use client";
-import AiChat from "@/components/layouts/ai-chat";
 import { useState } from "react";
+
+import AiChat from "@/components/layouts/ai-chat";
 import SideBar from "@/components/layouts/side-bar";
 import AppBar from "@/components/layouts/app-bar";
 
@@ -17,6 +18,13 @@ export default function RootLayout({
       {/* --- MOBILE SIDEBAR OVERLAY --- */}
       {isMobileSidebarOpen && (
         <div
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              setIsMobileSidebarOpen(false);
+            }
+          }}
           className="fixed inset-0 bg-slate-900/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
           onClick={() => setIsMobileSidebarOpen(false)}
         />
@@ -24,10 +32,10 @@ export default function RootLayout({
 
       {/* --- SIDEBAR --- */}
       <SideBar
-        isSidebarExpanded={isSidebarExpanded}
-        setIsSidebarExpanded={setIsSidebarExpanded}
         isMobileSidebarOpen={isMobileSidebarOpen}
+        isSidebarExpanded={isSidebarExpanded}
         setIsMobileSidebarOpen={setIsMobileSidebarOpen}
+        setIsSidebarExpanded={setIsSidebarExpanded}
       />
       {/* --- MAIN CONTENT AREA --- */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative ">

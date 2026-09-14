@@ -129,6 +129,7 @@ export default function App() {
         light: "bg-violet-100",
       },
     };
+
     return themes[color] || themes.emerald;
   };
 
@@ -189,7 +190,7 @@ export default function App() {
           <div className="lg:col-span-2 bg-white rounded-3xl p-6 md:p-8 border border-slate-100 shadow-sm">
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-xl font-bold text-slate-800">
-                Today's Timeline
+                Today&apos;s Timeline
               </h3>
               <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">
                 6 Items
@@ -207,7 +208,7 @@ export default function App() {
                     {/* Timeline Dot */}
                     <span
                       className={`absolute -left-[11px] top-1.5 w-5 h-5 rounded-full border-4 border-white ${theme.dot} shadow-sm group-hover:scale-110 transition-transform`}
-                    ></span>
+                    />
 
                     {/* Event Card */}
                     <div
@@ -234,11 +235,11 @@ export default function App() {
 
                           <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-slate-500">
                             <div className="flex items-center gap-1.5">
-                              <MapPin size={15} className="text-slate-400" />
+                              <MapPin className="text-slate-400" size={15} />
                               {item.location}
                             </div>
                             <div className="flex items-center gap-1.5">
-                              <Users size={15} className="text-slate-400" />
+                              <Users className="text-slate-400" size={15} />
                               {item.instructor}
                             </div>
                           </div>
@@ -287,7 +288,7 @@ export default function App() {
 
               <div className="grid grid-cols-7 gap-1 text-center text-sm">
                 {/* Blank days for padding */}
-                <div className="p-1.5 text-slate-300"></div>
+                <div className="p-1.5 text-slate-300" />
                 {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => (
                   <div
                     key={date}
@@ -298,7 +299,7 @@ export default function App() {
                     {date}
                     {/* Add tiny dots for events */}
                     {(date === 5 || date === 12 || date === 18) && (
-                      <span className="absolute mt-5 w-1 h-1 bg-rose-400 rounded-full"></span>
+                      <span className="absolute mt-5 w-1 h-1 bg-rose-400 rounded-full" />
                     )}
                   </div>
                 ))}
@@ -307,10 +308,10 @@ export default function App() {
 
             {/* Upcoming Summary Box */}
             <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 rounded-3xl p-6 text-white shadow-md relative overflow-hidden">
-              <div className="absolute top-0 right-0 -mt-6 -mr-6 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl pointer-events-none"></div>
+              <div className="absolute top-0 right-0 -mt-6 -mr-6 w-32 h-32 bg-white opacity-10 rounded-full blur-2xl pointer-events-none" />
 
               <div className="flex items-center gap-3 mb-4">
-                <CalendarIcon size={24} className="text-indigo-200" />
+                <CalendarIcon className="text-indigo-200" size={24} />
                 <h3 className="text-lg font-bold">This Week</h3>
               </div>
 

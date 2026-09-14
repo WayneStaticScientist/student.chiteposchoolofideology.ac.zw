@@ -1,5 +1,3 @@
-import axios, { AxiosResponse } from "axios";
-
 interface AiMessageModel {
   isAI: boolean;
   message: string;
@@ -24,19 +22,22 @@ export async function* sendMessageStream(
 
   // 2. Format the conversation string
   let messageCount = 0;
+
   for (let i = startFromIndex; i < messages.length - 2; i++) {
     const msg = messages[i];
+
     // Break if convo is too long or we've hit the message limit
     if (convo.length > 10000 || (messageCount > 10 && !msg.isAI)) break;
 
     const prefix = msg.isAI ? "AI: " : "User: ";
+
     convo += `${prefix}${msg.message.trim()}\n`;
     messageCount++;
   }
 
   // 3. Make the Axios request
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_NYIKA_API}/user/chat/ai-stream-van`,
+    `${process.env.NEXT_PUBLIC_API_URL}/vanguard/stream`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -59,6 +60,7 @@ export async function* sendMessageStream(
 
   while (true) {
     const { done, value } = await reader.read();
+
     if (done) break;
 
     // Decode the current chunk and add to buffer
