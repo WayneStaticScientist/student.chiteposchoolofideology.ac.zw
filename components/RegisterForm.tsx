@@ -94,6 +94,9 @@ export const RegisterForm = ({ nationalId }: { nationalId: string }) => {
 
         setEnrollmentDetails(res.data);
         setValue("nationalId", res.data.nationalId);
+        if (res.data.email) {
+          setValue("email", res.data.email);
+        }
         setPhone(res.data.phoneNumber ?? "");
 
         if (res.data.status !== "accepted") {
@@ -296,6 +299,9 @@ export const RegisterForm = ({ nationalId }: { nationalId: string }) => {
           {enrollmentDetails.firstName} {enrollmentDetails.lastName}
         </p>
         <p className="text-sm text-gray-600">{enrollmentDetails.phoneNumber}</p>
+        {enrollmentDetails.email && (
+          <p className="text-sm text-gray-600">{enrollmentDetails.email}</p>
+        )}
         <p className="text-sm font-medium text-primary mt-2">
           ID: {enrollmentDetails.nationalId}
         </p>

@@ -20,6 +20,7 @@ const schema = z.object({
   nationalId: z.string().min(1, "National ID is required"),
   countryOfResidence: z.string().min(1, "Country is required"),
   phoneNumber: z.string().min(1, "Phone number is required"),
+  email: z.string().email("Invalid email address"),
   city: z.string().min(1, "City is required"),
   birthCity: z.string().min(1, "Birth city is required"),
 });
@@ -42,6 +43,7 @@ export const EnrollmentForm = () => {
       nationalId: "",
       countryOfResidence: "",
       phoneNumber: "",
+      email: "",
       city: "",
       birthCity: "",
     },
@@ -122,9 +124,12 @@ export const EnrollmentForm = () => {
       await submitEnrollment(data);
       setShowSuccessDialog(true);
       reset();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
-      alert("Failed to submit enrollment.");
+      const axiosErr = error as { response?: { data?: { error?: string } } };
+      alert(
+        axiosErr.response?.data?.error || "Failed to submit enrollment.",
+      );
     }
   };
 
@@ -241,6 +246,34 @@ export const EnrollmentForm = () => {
                 {errors.countryOfResidence.message}
               </p>
             )}
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-sm font-medium text-gray-700">
+              Email Address
+            </label>
+            <Controller
+              control={control}
+              name="email"
+              render={({ field }) => (
+                <input
+                  {...field}
+                  type="email"
+                  autoComplete="email"
+                  className={`w-full border rounded-xl px-4 py-3 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary transition-colors ${errors.email ? "border-secondary" : "border-gray-300"}`}
+                  placeholder="name@example.com"
+                  value={field.value ?? ""}
+                />
+              )}
+            />
+            {errors.email && (
+              <span className="text-xs text-secondary">
+                {errors.email.message}
+              </span>
+            )}
+            <p className="text-xs text-gray-500">
+              Use this same email when you complete registration after acceptance.
+            </p>
           </div>
 
           <div className="flex flex-col gap-1">
