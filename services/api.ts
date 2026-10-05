@@ -75,6 +75,35 @@ export const getEnrollmentByNationalId = async (nationalId: string) => {
   return response.data;
 };
 
+export const getRegistrationRequirements = async (nationalId: string) => {
+  const response = await api.get(
+    `/enrollments/${nationalId}/registration-requirements`,
+  );
+
+  return response.data;
+};
+
+export const initiateRegistrationPayment = async (data: {
+  nationalId: string;
+  method: "ecocash" | "onemoney" | "paynow";
+  phone?: string;
+}) => {
+  const response = await api.post("/payments/initiate-registration", data);
+
+  return response.data;
+};
+
+export const checkRegistrationPaymentStatus = async (
+  paymentId: string,
+  nationalId: string,
+) => {
+  const response = await api.get(`/payments/registration/status/${paymentId}`, {
+    params: { nationalId },
+  });
+
+  return response.data;
+};
+
 export const getStudentDashboard = async () => {
   const response = await api.get("/users/me/dashboard");
 
