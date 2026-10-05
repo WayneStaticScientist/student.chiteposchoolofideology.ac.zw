@@ -1,6 +1,16 @@
 "use client";
+
 import React, { useEffect, useState } from "react";
-import { BookOpen, Clock, Award, Loader2, Radio } from "lucide-react";
+import {
+  ArrowRight,
+  Award,
+  BookOpen,
+  CalendarDays,
+  Clock,
+  GraduationCap,
+  Loader2,
+  Radio,
+} from "lucide-react";
 import Link from "next/link";
 
 import { getStudentDashboard, getStudentSchedules } from "@/services/api";
@@ -51,7 +61,7 @@ export default function DashboardPage() {
             (s: any) => s.status !== "completed",
           ) || [],
         );
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(err);
         setError("Failed to load dashboard data.");
       } finally {
@@ -64,10 +74,10 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-primary animate-spin" />
-          <p className="text-slate-500 font-medium">Loading dashboard...</p>
+      <div className="flex flex-1 items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="font-medium text-slate-500">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -75,207 +85,235 @@ export default function DashboardPage() {
 
   if (error || !data) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm text-center max-w-md">
-          <p className="text-slate-500">{error || "Something went wrong."}</p>
+      <div className="flex flex-1 items-center justify-center bg-slate-50 p-6">
+        <div className="max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <p className="text-slate-600">{error || "Something went wrong."}</p>
         </div>
       </div>
     );
   }
 
+  const today = new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+
   return (
-    <div className="flex-1 overflow-y-auto p-6 lg:p-10 scroll-smooth">
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Welcome Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">
-            Welcome back, {data.user.firstName}! 👋
+    <div className="flex-1 overflow-y-auto bg-slate-50">
+      <div className="border-b border-slate-200 bg-white">
+        <div className="mx-auto max-w-7xl px-6 py-8 lg:px-10">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+            Overview
+          </p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-800">
+            Welcome back, {data.user.firstName}
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Here&apos;s what&apos;s happening with your studies today.
+          <p className="mt-2 text-slate-500">{today}</p>
+          <p className="mt-1 text-sm text-slate-500">
+            Summary of your academic activity and upcoming sessions.
           </p>
         </div>
+      </div>
 
-        {/* Live Schedules Banner */}
+      <div className="mx-auto max-w-7xl space-y-8 px-6 py-8 lg:px-10">
         {liveSchedules.length > 0 && (
-          <div className="bg-gradient-to-r from-rose-500 to-pink-500 rounded-3xl p-6 md:p-8 text-white shadow-xl shadow-rose-500/20 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-8 opacity-20">
-              <Radio size={120} />
-            </div>
-            <div className="relative z-10">
-              <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
-                <span className="flex h-4 w-4 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                  <span className="relative inline-flex rounded-full h-4 w-4 bg-white" />
-                </span>
-                Live & Upcoming Lectures
+          <section className="overflow-hidden rounded-2xl border border-primary/20 bg-primary text-white shadow-sm">
+            <div className="border-b border-white/15 px-6 py-4 md:px-8">
+              <h2 className="flex items-center gap-2 text-lg font-bold">
+                <Radio size={20} />
+                Live and upcoming lectures
               </h2>
-              <div className="space-y-3 max-w-2xl">
-                {liveSchedules.map((schedule) => {
-                  const isLive = schedule.status === "live";
+            </div>
+            <div className="space-y-3 p-6 md:p-8">
+              {liveSchedules.map((schedule) => {
+                const isLive = schedule.status === "live";
 
-                  return (
-                    <div
-                      key={schedule._id}
-                      className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 flex flex-col md:flex-row md:items-center justify-between gap-4"
-                    >
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-xs font-bold text-rose-600 bg-white px-2 py-0.5 rounded-md">
-                            {schedule.courseId?.code}
+                return (
+                  <div
+                    key={schedule._id}
+                    className="flex flex-col gap-4 rounded-xl border border-white/20 bg-white/10 p-5 md:flex-row md:items-center md:justify-between"
+                  >
+                    <div>
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                        {isLive && (
+                          <span className="rounded-md bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary">
+                            Live now
                           </span>
-                          <h3 className="font-bold text-xl">
-                            {schedule.title}
-                          </h3>
-                        </div>
-                        <p className="text-rose-100 text-sm">
+                        )}
+                        <span className="rounded-md bg-black/20 px-2 py-0.5 text-xs font-bold">
+                          {schedule.courseId?.code}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-bold">{schedule.title}</h3>
+                      {schedule.summary && (
+                        <p className="mt-1 text-sm text-white/85">
                           {schedule.summary}
                         </p>
-                        <div className="mt-2 inline-block bg-black/20 px-3 py-1 rounded-full text-sm font-semibold">
-                          {new Date(schedule.startTime).toLocaleString()}
-                        </div>
-                      </div>
-                      <Link
-                        className={`font-bold py-3 px-8 rounded-xl transition-all text-center whitespace-nowrap ${isLive ? "bg-white text-rose-600 hover:bg-rose-50 shadow-lg" : "bg-rose-700/50 hover:bg-rose-700 text-white border border-rose-400/50"}`}
-                        href={`/courses/${schedule.courseId?._id}/live/${schedule._id}`}
-                      >
-                        {isLive ? "Join Now" : "Enter Waiting Room"}
-                      </Link>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow flex items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-600">
-              <Award size={28} />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-500 mb-1">
-                Current GPA
-              </p>
-              <h3 className="text-3xl font-bold text-slate-800">
-                {data.stats.gpa.toFixed(1)}
-                <span className="text-lg text-slate-400 font-medium">/4.0</span>
-              </h3>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow flex items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600">
-              <Clock size={28} />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-500 mb-1">
-                Attendance
-              </p>
-              <h3 className="text-3xl font-bold text-slate-800">
-                {data.stats.attendance}
-                <span className="text-lg text-slate-400 font-medium">%</span>
-              </h3>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow flex items-center gap-5">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-600">
-              <BookOpen size={28} />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-500 mb-1">
-                Active Courses
-              </p>
-              <h3 className="text-3xl font-bold text-slate-800">
-                {data.stats.activeCourses}
-              </h3>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Today's Schedule */}
-          <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-slate-800">
-                Today&apos;s Schedule
-              </h2>
-              <button className="text-sm font-medium text-emerald-600 hover:text-emerald-700">
-                View Full Calendar
-              </button>
-            </div>
-            <div className="space-y-4">
-              {liveSchedules.length === 0 ? (
-                <div className="text-center py-10">
-                  <Clock className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                  <p className="text-slate-400 font-medium">
-                    No live or upcoming lectures today.
-                  </p>
-                </div>
-              ) : (
-                liveSchedules.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex flex-col sm:flex-row gap-4 sm:items-center p-4 rounded-2xl border border-slate-100 hover:border-emerald-100 hover:bg-emerald-50/50 transition-colors"
-                  >
-                    <div className="flex-shrink-0 w-32 text-sm font-bold text-slate-600">
-                      {new Date(item.startTime).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-slate-800">
-                        {item.courseId?.title}
-                      </h4>
-                      <p className="text-sm text-slate-500 flex items-center gap-2 mt-1">
-                        <span
-                          className={`inline-block w-2 h-2 rounded-full ${item.status === "live" ? "bg-rose-500 animate-pulse" : "bg-emerald-400"}`}
-                        />
-                        {item.title}
+                      )}
+                      <p className="mt-2 text-sm font-medium text-white/90">
+                        {new Date(schedule.startTime).toLocaleString()}
                       </p>
                     </div>
                     <Link
-                      className="hidden sm:block px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 rounded-xl transition-colors"
-                      href={`/courses/${item.courseId?._id}/live/${item._id}`}
+                      href={`/courses/${schedule.courseId?._id}/live/${schedule._id}`}
+                      className="inline-flex shrink-0 items-center justify-center rounded-xl bg-white px-6 py-3 text-sm font-bold text-primary transition-colors hover:bg-slate-50"
                     >
-                      Join
+                      {isLive ? "Join session" : "Waiting room"}
                     </Link>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Award size={22} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500">Current GPA</p>
+                <p className="text-2xl font-bold text-slate-800">
+                  {data.stats.gpa.toFixed(1)}
+                  <span className="text-base font-medium text-slate-400">
+                    {" "}
+                    / 4.0
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Clock size={22} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500">Attendance</p>
+                <p className="text-2xl font-bold text-slate-800">
+                  {data.stats.attendance}
+                  <span className="text-base font-medium text-slate-400">%</span>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <BookOpen size={22} />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500">
+                  Active courses
+                </p>
+                <p className="text-2xl font-bold text-slate-800">
+                  {data.stats.activeCourses}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {[
+            { href: "/courses", label: "My courses", icon: BookOpen },
+            { href: "/grades", label: "Grades", icon: GraduationCap },
+            { href: "/schedules", label: "Schedules", icon: CalendarDays },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="group flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm transition-all hover:border-primary/30 hover:shadow-md"
+              >
+                <span className="flex items-center gap-3 font-semibold text-slate-700 group-hover:text-primary">
+                  <Icon className="text-primary" size={20} />
+                  {item.label}
+                </span>
+                <ArrowRight
+                  className="text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-primary"
+                  size={18}
+                />
+              </Link>
+            );
+          })}
+        </section>
+
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <div className="lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+            <div className="mb-6 flex items-center justify-between gap-3">
+              <h2 className="text-xl font-bold text-slate-800">
+                Today&apos;s schedule
+              </h2>
+              <Link
+                href="/schedules"
+                className="text-sm font-semibold text-primary hover:text-primary/80"
+              >
+                View calendar
+              </Link>
+            </div>
+            <div className="space-y-3">
+              {data.schedule.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-200 py-12 text-center">
+                  <Clock className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+                  <p className="font-medium text-slate-500">
+                    No classes scheduled for today.
+                  </p>
+                </div>
+              ) : (
+                data.schedule.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex flex-col gap-3 rounded-xl border border-slate-100 p-4 sm:flex-row sm:items-center"
+                  >
+                    <div className="w-28 shrink-0 text-sm font-bold text-primary">
+                      {item.time}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-semibold text-slate-800">
+                        {item.course}
+                      </h4>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {item.type}
+                        {item.room ? ` · ${item.room}` : ""}
+                      </p>
+                    </div>
                   </div>
                 ))
               )}
             </div>
           </div>
 
-          {/* Upcoming Deadlines */}
-          <div className="bg-emerald-700 rounded-3xl shadow-lg p-8 text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl" />
-            <h2 className="text-xl font-bold mb-6 relative z-10">
-              Upcoming Deadlines
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+            <h2 className="mb-6 text-xl font-bold text-slate-800">
+              Upcoming deadlines
             </h2>
-            <div className="space-y-5 relative z-10">
+            <div className="space-y-4">
               {data.deadlines.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-emerald-200 font-medium">
-                    No upcoming deadlines. You&apos;re all caught up! 🎉
+                <div className="rounded-xl border border-dashed border-slate-200 py-10 text-center">
+                  <p className="text-sm font-medium text-slate-500">
+                    No upcoming deadlines. You are up to date.
                   </p>
                 </div>
               ) : (
                 data.deadlines.map((item, idx) => (
                   <div
                     key={idx}
-                    className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20"
+                    className="rounded-xl border border-slate-100 bg-slate-50/80 p-4"
                   >
-                    <p className="text-xs text-emerald-200 font-medium mb-1">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                       {item.dueDate}
                     </p>
-                    <h4 className="font-semibold mb-2">{item.title}</h4>
-                    <div className="w-full bg-white/20 rounded-full h-1.5">
+                    <h4 className="mt-1 font-semibold text-slate-800">
+                      {item.title}
+                    </h4>
+                    <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-200">
                       <div
-                        className="bg-emerald-300 h-1.5 rounded-full"
+                        className="h-full rounded-full bg-primary transition-all"
                         style={{ width: `${item.progress}%` }}
                       />
                     </div>
@@ -283,9 +321,12 @@ export default function DashboardPage() {
                 ))
               )}
             </div>
-            <button className="mt-6 w-full py-3 rounded-xl bg-white text-emerald-800 font-semibold hover:bg-emerald-50 transition-colors">
-              View All Assignments
-            </button>
+            <Link
+              href="/courses"
+              className="mt-6 flex min-h-11 w-full items-center justify-center rounded-xl border border-slate-200 text-sm font-bold text-slate-700 transition-colors hover:border-primary/30 hover:text-primary"
+            >
+              Browse courses
+            </Link>
           </div>
         </div>
       </div>

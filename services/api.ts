@@ -81,8 +81,51 @@ export const getStudentDashboard = async () => {
   return response.data;
 };
 
+export type StudentCourse = {
+  _id: string;
+  code: string;
+  title: string;
+  description?: string;
+  credits?: number;
+  instructor: string;
+  progress: number;
+  lastAccessedAt: string | null;
+  theme: string;
+  updates: { notes: number; tutorials: number; quizzes: number };
+  counts: { notes: number; tutorials: number; quizzes: number };
+};
+
+export type PendingQuiz = {
+  quizId: string;
+  courseId: string;
+  courseTitle: string;
+  title: string;
+  durationMinutes: number;
+  status: "not-started" | "in-progress";
+};
+
+export const getStudentCourses = async () => {
+  const response = await api.get<{ courses: StudentCourse[]; pendingQuiz: PendingQuiz | null }>(
+    "/courses/student",
+  );
+
+  return response.data;
+};
+
 export const startQuizAttempt = async (quizId: string) => {
   const response = await api.get(`/topics/quiz/${quizId}/start`);
+
+  return response.data;
+};
+
+export const getQuizReview = async (quizId: string) => {
+  const response = await api.get<{
+    quizTitle: string;
+    score: number;
+    totalQuestions: number;
+    completedAt?: string;
+    attemptId: string;
+  }>(`/topics/quiz/${quizId}/review`);
 
   return response.data;
 };

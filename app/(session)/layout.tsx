@@ -1,9 +1,10 @@
 "use client";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import AiChat from "@/components/layouts/ai-chat";
-import SideBar from "@/components/layouts/side-bar";
 import AppBar from "@/components/layouts/app-bar";
+import SideBar from "@/components/layouts/side-bar";
 
 export default function RootLayout({
   children,
@@ -12,6 +13,8 @@ export default function RootLayout({
 }) {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const pathname = usePathname();
+  const isQuizAttempt = /\/courses\/[^/]+\/quiz\/[^/]+$/.test(pathname ?? "");
 
   return (
     <div className="flex h-screen w-full bg-slate-50 overflow-hidden font-sans text-slate-800">
@@ -30,23 +33,24 @@ export default function RootLayout({
         />
       )}
 
-      {/* --- SIDEBAR --- */}
-      <SideBar
-        isMobileSidebarOpen={isMobileSidebarOpen}
-        isSidebarExpanded={isSidebarExpanded}
-        setIsMobileSidebarOpen={setIsMobileSidebarOpen}
-        setIsSidebarExpanded={setIsSidebarExpanded}
-      />
-      {/* --- MAIN CONTENT AREA --- */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative ">
-        {/* Header */}
-        <AppBar setIsMobileSidebarOpen={setIsMobileSidebarOpen} />
-        {/* Dashboard Content */}
-        {children}
+      {!isQuizAttempt && (
+        <SideBar
+          isMobileSidebarOpen={isMobileSidebarOpen}
+          isSidebarExpanded={isSidebarExpanded}
+          setIsMobileSidebarOpen={setIsMobileSidebarOpen}
+          setIsSidebarExpanded={setIsSidebarExpanded}
+        />
+      )}
+      <main className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
+        {!isQuizAttempt && (
+          <AppBar setIsMobileSidebarOpen={setIsMobileSidebarOpen} />
+        )}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {children}
+        </div>
       </main>
 
-      {/* --- FLOATING AI CHAT --- */}
-      <AiChat />
+      {!isQuizAttempt && <AiChat />}
     </div>
   );
 }

@@ -10,12 +10,101 @@ import {
   LogOut,
   Settings,
   X,
+  type LucideIcon,
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import React from "react";
 
 import { logout } from "@/services/api";
+
+type NavItem = {
+  icon: LucideIcon;
+  label: string;
+  path: string;
+};
+
+function isNavActive(pathname: string | null, itemPath: string) {
+  const current = pathname?.toLowerCase().trim() ?? "";
+  const target = itemPath.toLowerCase().trim();
+
+  if (target === "/") {
+    return current === "/";
+  }
+
+  return current === target || current.startsWith(`${target}/`);
+}
+
+function NavButton({
+  item,
+  active,
+  expanded,
+  onClick,
+  variant = "default",
+}: {
+  item: { icon: LucideIcon; label: string };
+  active: boolean;
+  expanded: boolean;
+  onClick: () => void;
+  variant?: "default" | "danger";
+}) {
+  const Icon = item.icon;
+
+  return (
+    <button
+      type="button"
+      className={`
+        group relative flex w-full items-center rounded-xl transition-all duration-200
+        ${expanded ? "gap-3 px-3 py-2.5" : "justify-center px-0 py-3 lg:px-0"}
+        ${
+          active
+            ? "bg-emerald-800/80 text-white shadow-lg shadow-emerald-950/40 ring-1 ring-emerald-600/40"
+            : variant === "danger"
+              ? "text-emerald-300/90 hover:bg-rose-500/10 hover:text-rose-300"
+              : "text-emerald-200/80 hover:bg-emerald-900/60 hover:text-emerald-50"
+        }
+      `}
+      title={!expanded ? item.label : undefined}
+      onClick={onClick}
+    >
+      {active && (
+        <span
+          aria-hidden
+          className={`absolute top-1/2 h-7 w-1 -translate-y-1/2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.6)] ${expanded ? "left-0" : "left-1 lg:left-0.5"}`}
+        />
+      )}
+
+      <span
+        className={`
+          flex shrink-0 items-center justify-center rounded-lg transition-colors
+          ${expanded ? "h-9 w-9" : "h-10 w-10"}
+          ${
+            active
+              ? "bg-emerald-700/50 text-emerald-100"
+              : "bg-emerald-950/40 text-emerald-300 group-hover:bg-emerald-900/50 group-hover:text-emerald-100"
+          }
+        `}
+      >
+        <Icon className={active ? "text-emerald-200" : undefined} size={20} strokeWidth={active ? 2.25 : 2} />
+      </span>
+
+      <span
+        className={`truncate text-sm font-medium tracking-wide transition-all duration-300 ${
+          expanded ? "opacity-100" : "lg:pointer-events-none lg:w-0 lg:opacity-0"
+        }`}
+      >
+        {item.label}
+      </span>
+
+      {!expanded && (
+        <div className="pointer-events-none absolute left-full z-50 ml-3 hidden whitespace-nowrap rounded-lg border border-emerald-800/80 bg-emerald-950 px-3 py-2 text-sm font-medium text-emerald-50 opacity-0 shadow-xl transition-all group-hover:visible group-hover:opacity-100 lg:block">
+          {item.label}
+          <span className="absolute -left-1 top-1/2 h-2 w-2 -translate-y-1/2 rotate-45 border-b border-l border-emerald-800/80 bg-emerald-950" />
+        </div>
+      )}
+    </button>
+  );
+}
 
 export default function SideBar({
   isSidebarExpanded,
@@ -29,14 +118,15 @@ export default function SideBar({
   setIsMobileSidebarOpen: (state: boolean) => void;
 }) {
   const router = useRouter();
-  const navItems = [
+  const path = usePathname();
+
+  const navItems: NavItem[] = [
     { icon: Home, label: "Dashboard", path: "/" },
     { icon: BookOpen, label: "Courses", path: "/courses" },
     { icon: GraduationCap, label: "Grades", path: "/grades" },
     { icon: Calendar, label: "Schedules", path: "/schedules" },
     { icon: FileText, label: "Bursary", path: "/bursary" },
   ];
-  const path = usePathname();
 
   const handleLogout = async () => {
     try {
@@ -48,141 +138,123 @@ export default function SideBar({
     }
   };
 
+  const navigate = (itemPath: string) => {
+    if (isNavActive(path, itemPath)) return;
+    setIsMobileSidebarOpen(false);
+    router.push(itemPath);
+  };
+
   return (
-    <>
-      <aside
-        className={`fixed lg:relative top-0 left-0 h-full z-50 bg-emerald-950 text-emerald-50 transition-all duration-300 ease-in-out flex flex-col shadow-2xl lg:shadow-none
-          ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
-          ${isSidebarExpanded ? "w-64" : "w-20"}
-        `}
-      >
-        {/* Sidebar Header */}
-        <div className="flex items-center justify-between h-20 px-4 border-b border-emerald-800/50">
-          <div className="flex items-center gap-3 overflow-hidden whitespace-nowrap">
-            <div className="bg-white text-white p-2 rounded-xl flex-shrink-0 shadow-lg shadow-emerald-500/30">
-              <Image
-                alt={"logo"}
-                height={30}
-                src={"/apple-touch-icon.png"}
-                width={30}
-              />
+    <aside
+      className={`
+        fixed left-0 top-0 z-50 flex h-full flex-col
+        border-r border-emerald-800/40
+        bg-gradient-to-b from-emerald-950 via-[#022c22] to-emerald-950
+        text-emerald-50 shadow-2xl shadow-emerald-950/50
+        transition-[width,transform] duration-300 ease-out
+        lg:relative lg:shadow-none
+        ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+        ${isSidebarExpanded ? "w-[17.5rem]" : "w-[5.25rem]"}
+      `}
+    >
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(0,138,46,0.18),transparent_55%)]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-emerald-500/25 to-transparent"
+      />
+
+      {/* Header */}
+      <div className="relative flex h-[4.75rem] shrink-0 items-center justify-between border-b border-emerald-800/50 px-4">
+        <div
+          className={`flex min-w-0 items-center overflow-hidden ${isSidebarExpanded ? "gap-3" : "w-full justify-center lg:justify-center"}`}
+        >
+          <div className="relative flex shrink-0 rounded-2xl bg-white p-2 shadow-lg shadow-emerald-500/25 ring-1 ring-emerald-400/30">
+            <Image alt="Chitepo logo" height={28} src="/apple-touch-icon.png" width={28} />
+          </div>
+          {isSidebarExpanded && (
+            <div className="min-w-0">
+              <p className="truncate text-lg font-bold leading-tight tracking-tight">Chitepo</p>
+              <p className="truncate text-[11px] font-medium uppercase tracking-[0.2em] text-emerald-400/80">
+                Student Portal
+              </p>
             </div>
-            {isSidebarExpanded && (
-              <span className="font-bold text-xl tracking-wide">Chitepo</span>
-            )}
-          </div>
-          {/* Mobile Close Button */}
-          <button
-            className="lg:hidden text-emerald-300 hover:text-white p-1"
-            onClick={() => setIsMobileSidebarOpen(false)}
-          >
-            <X size={24} />
-          </button>
+          )}
         </div>
+        <button
+          type="button"
+          className="rounded-lg p-2 text-emerald-300 transition-colors hover:bg-emerald-900/60 hover:text-white lg:hidden"
+          onClick={() => setIsMobileSidebarOpen(false)}
+          aria-label="Close menu"
+        >
+          <X size={22} />
+        </button>
+      </div>
 
-        {/* Navigation Links */}
-        <nav className="flex-1 overflow-y-auto py-6 flex flex-col gap-2 px-3">
-          {navItems.map((item, index) => {
-            const active =
-              path?.toLowerCase().trim() === item.path.toLowerCase().trim();
-
-            return (
-              <button
-                key={index}
-                className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 group relative
-                ${
-                  active
-                    ? "bg-emerald-800 text-white shadow-md"
-                    : "text-emerald-300 hover:bg-emerald-900/50 hover:text-emerald-50"
-                }
-              `}
-                title={!isSidebarExpanded ? item.label : ""}
-                onClick={() => {
-                  if (item.path == path) return;
-                  window.location.href = item.path;
-                }}
-              >
-                <item.icon
-                  className={`flex-shrink-0 ${active ? "text-emerald-400" : ""}`}
-                  size={22}
-                />
-
-                {/* Desktop Expanded / Mobile Label */}
-                <span
-                  className={`whitespace-nowrap transition-opacity duration-300 ${!isSidebarExpanded ? "lg:opacity-0 lg:w-0 lg:hidden" : "opacity-100"}`}
-                >
-                  {item.label}
-                </span>
-
-                {/* Tooltip for collapsed desktop state */}
-                {!isSidebarExpanded && (
-                  <div className="absolute left-full ml-4 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 lg:block hidden shadow-xl">
-                    {item.label}
-                  </div>
-                )}
-              </button>
-            );
-          })}
-          {/* Settings & Logout */}
-          <div className="mt-auto pt-4 border-t border-emerald-800/50 flex flex-col gap-2">
-            <button
-              className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 group relative
-                ${path === "/settings" ? "bg-emerald-800 text-white shadow-md" : "text-emerald-300 hover:bg-emerald-900/50 hover:text-emerald-50"}
-              `}
-              title={!isSidebarExpanded ? "Settings" : ""}
-              onClick={() => router.push("/settings")}
-            >
-              <Settings
-                className={`flex-shrink-0 ${path === "/settings" ? "text-emerald-400" : ""}`}
-                size={22}
-              />
-              <span
-                className={`whitespace-nowrap transition-opacity duration-300 ${!isSidebarExpanded ? "lg:opacity-0 lg:w-0 lg:hidden" : "opacity-100"}`}
-              >
-                Settings
-              </span>
-              {!isSidebarExpanded && (
-                <div className="absolute left-full ml-4 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 lg:block hidden shadow-xl">
-                  Settings
-                </div>
-              )}
-            </button>
-            <button
-              className={`flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-200 group relative text-emerald-300 hover:bg-emerald-900/50 hover:text-rose-400`}
-              title={!isSidebarExpanded ? "Log Out" : ""}
-              onClick={handleLogout}
-            >
-              <LogOut className="flex-shrink-0" size={22} />
-              <span
-                className={`whitespace-nowrap transition-opacity duration-300 ${!isSidebarExpanded ? "lg:opacity-0 lg:w-0 lg:hidden" : "opacity-100"}`}
-              >
-                Log Out
-              </span>
-              {!isSidebarExpanded && (
-                <div className="absolute left-full ml-4 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 lg:block hidden shadow-xl">
-                  Log Out
-                </div>
-              )}
-            </button>
-          </div>
-        </nav>
-
-        {/* Sidebar Footer / Desktop Toggle */}
-        <div className="p-4 border-t border-emerald-800/50 hidden lg:flex justify-end">
-          <button
-            className="p-2 rounded-lg text-emerald-300 hover:bg-emerald-800 hover:text-white transition-colors flex items-center justify-center w-full"
-            onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
-          >
-            {isSidebarExpanded ? (
-              <div className="flex items-center gap-2 text-sm w-full justify-center">
-                <ChevronLeft size={20} /> Collapse
-              </div>
-            ) : (
-              <ChevronRight size={20} />
-            )}
-          </button>
+      {/* Main navigation */}
+      <nav className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden px-3 py-5">
+        {isSidebarExpanded && (
+          <p className="mb-3 px-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-500/90">
+            Menu
+          </p>
+        )}
+        <div className="flex flex-col gap-1">
+          {navItems.map((item) => (
+            <NavButton
+              key={item.path}
+              active={isNavActive(path, item.path)}
+              expanded={isSidebarExpanded}
+              item={item}
+              onClick={() => navigate(item.path)}
+            />
+          ))}
         </div>
-      </aside>
-    </>
+      </nav>
+
+      {/* Footer actions */}
+      <div className="relative shrink-0 space-y-1 border-t border-emerald-800/50 px-3 py-4">
+        {isSidebarExpanded && (
+          <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-500/90">
+            Account
+          </p>
+        )}
+        <NavButton
+          active={isNavActive(path, "/settings")}
+          expanded={isSidebarExpanded}
+          item={{ icon: Settings, label: "Settings" }}
+          onClick={() => navigate("/settings")}
+        />
+        <NavButton
+          active={false}
+          expanded={isSidebarExpanded}
+          item={{ icon: LogOut, label: "Log Out" }}
+          variant="danger"
+          onClick={handleLogout}
+        />
+
+        <button
+          type="button"
+          className={`
+            mt-3 hidden w-full items-center rounded-xl border border-emerald-800/60 bg-emerald-950/50
+            text-emerald-300 transition-all hover:border-emerald-700 hover:bg-emerald-900/50 hover:text-white
+            lg:flex
+            ${isSidebarExpanded ? "justify-center gap-2 px-3 py-2.5 text-sm font-medium" : "justify-center p-2.5"}
+          `}
+          onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
+          aria-label={isSidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
+        >
+          {isSidebarExpanded ? (
+            <>
+              <ChevronLeft size={18} />
+              <span>Collapse</span>
+            </>
+          ) : (
+            <ChevronRight size={20} />
+          )}
+        </button>
+      </div>
+    </aside>
   );
 }
