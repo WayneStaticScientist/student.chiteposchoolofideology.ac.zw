@@ -77,7 +77,7 @@ export default function StudentLiveRoom() {
   }
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-zinc-950 overflow-hidden fixed inset-0 z-50">
+    <div className="fixed inset-0 z-[200] flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden bg-zinc-950">
       <LiveKitRoom
         audio={false} // Students default to muted initially
         data-lk-theme="default"

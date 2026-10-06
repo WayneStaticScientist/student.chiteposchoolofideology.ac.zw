@@ -17,6 +17,7 @@ import { ChatChannel } from "./ChatChannel";
 import { ParticipantsPanel } from "./ParticipantsPanel";
 import { ConfirmModal } from "./ConfirmModal";
 import { LiveAttendanceTracker } from "@/components/attendance/LiveAttendanceTracker";
+import { STUDIO_DOCK_SPACER_CLASS } from "@/components/live/studio-dock-layout";
 
 interface ZoomStudioProps {
   courseId: string;
@@ -349,7 +350,7 @@ export const ZoomStudio: React.FC<ZoomStudioProps> = ({
   }, [room, router, courseId]);
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-zinc-950 text-white overflow-hidden select-none">
+    <div className="flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden bg-zinc-950 text-white select-none">
       {/* Top Zoom Header */}
       <StudioHeader
         courseId={courseId}
@@ -390,6 +391,8 @@ export const ZoomStudio: React.FC<ZoomStudioProps> = ({
           onToggleFullscreen={() => setIsChatFullscreen((prev) => !prev)}
         />
       </div>
+
+      <div aria-hidden className={STUDIO_DOCK_SPACER_CLASS} />
 
       {/* Bottom Zoom Control Dock */}
       <StudioControlBar

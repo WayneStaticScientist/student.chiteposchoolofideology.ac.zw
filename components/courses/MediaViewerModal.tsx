@@ -1,7 +1,10 @@
 "use client";
 
 import { File, PlayCircle, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
+import { MobileVideoControls } from "@/components/courses/MobileVideoControls";
 import type { CourseMedia } from "@/lib/course-content";
 import { getAssetUrl } from "@/lib/course-content";
 
@@ -14,9 +17,32 @@ export default function MediaViewerModal({
 }) {
   const src = getAssetUrl(media.url);
   const isAv = media.type === "video" || media.type === "voice";
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const [useMobileControls, setUseMobileControls] = useState(false);
 
-  return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-black md:items-center md:justify-center md:bg-slate-900/90 md:p-6 md:backdrop-blur-sm">
+  useEffect(() => {
+    setMounted(true);
+    const mq = window.matchMedia("(max-width: 768px)");
+    const update = () => setUseMobileControls(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mounted]);
+
+  if (!mounted) return null;
+
+  const content = (
+    <div className="fixed inset-0 z-[200] flex flex-col bg-black md:items-center md:justify-center md:bg-slate-900/90 md:p-6 md:backdrop-blur-sm">
       <div className="flex min-h-0 flex-1 flex-col md:h-[85vh] md:max-h-[85vh] md:w-full md:max-w-5xl md:overflow-hidden md:rounded-2xl md:bg-white md:shadow-2xl">
         <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-zinc-950/90 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:border-slate-100 md:bg-slate-50">
           <h3 className="flex min-w-0 items-center gap-2 text-base font-bold text-white md:text-lg md:text-slate-800">
@@ -38,17 +64,22 @@ export default function MediaViewerModal({
         </div>
 
         <div
-          className="relative flex min-h-0 flex-1 flex-col items-center justify-center bg-black pb-[max(0.5rem,env(safe-area-inset-bottom))] md:bg-slate-100 md:pb-0"
+          className={`relative flex min-h-0 flex-1 flex-col items-center justify-center bg-black md:bg-slate-100 ${
+            isAv && useMobileControls
+              ? "pb-[calc(5.5rem+env(safe-area-inset-bottom))]"
+              : "pb-[max(0.5rem,env(safe-area-inset-bottom))] md:pb-0"
+          }`}
           onContextMenu={(e) => e.preventDefault()}
         >
           {isAv ? (
             <video
+              ref={videoRef}
               key={src}
               autoPlay
-              controls
               playsInline
               preload="metadata"
-              className="max-h-full w-full max-w-full object-contain"
+              controls={!useMobileControls}
+              className="block max-h-full w-full max-w-full object-contain"
               controlsList="nodownload"
               src={src}
             >
@@ -71,6 +102,11 @@ export default function MediaViewerModal({
           )}
         </div>
       </div>
+      {isAv && useMobileControls ? (
+        <MobileVideoControls videoRef={videoRef} />
+      ) : null}
     </div>
   );
+
+  return createPortal(content, document.body);
 }
