@@ -2,7 +2,6 @@
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-import AiChat from "@/components/layouts/ai-chat";
 import AppBar from "@/components/layouts/app-bar";
 import SideBar from "@/components/layouts/side-bar";
 
@@ -50,7 +49,6 @@ export default function RootLayout({
         </div>
       </main>
 
-      {!isQuizAttempt && <AiChat />}
     </div>
   );
 }
