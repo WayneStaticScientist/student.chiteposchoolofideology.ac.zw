@@ -6,12 +6,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import {
+  AlertCircle,
   Loader2,
   UserCheck,
   CheckCircle2,
   CreditCard,
   Lock,
   Smartphone,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -30,6 +32,8 @@ const schema = z.object({
 });
 
 type FormData = z.infer<typeof schema>;
+
+const REG_PAYMENT_PENDING_KEY = "chitepo_reg_payment_pending";
 
 type FeeLine = {
   _id: string;
@@ -66,6 +70,8 @@ export const RegisterForm = ({ nationalId }: { nationalId: string }) => {
     redirectUrl?: string;
     instructions?: string;
   } | null>(null);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentSuccessVisible, setPaymentSuccessVisible] = useState(false);
 
   const {
     control,
@@ -86,6 +92,62 @@ export const RegisterForm = ({ nationalId }: { nationalId: string }) => {
     setRequirements(reqRes.data);
     return reqRes.data as RegistrationRequirements;
   }, []);
+
+  const markPaymentSuccess = useCallback(() => {
+    try {
+      sessionStorage.removeItem(REG_PAYMENT_PENDING_KEY);
+    } catch {
+      /* ignore */
+    }
+    setPaymentResult(null);
+    setPaymentModalOpen(true);
+    setPaymentSuccessVisible(true);
+  }, []);
+
+  const closePaymentSuccess = useCallback(() => {
+    setPaymentSuccessVisible(false);
+    setPaymentModalOpen(false);
+    requestAnimationFrame(() => {
+      document.getElementById("registration-account-form")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }, []);
+
+  const pollPaymentStatus = useCallback(async () => {
+    if (
+      !paymentResult?.paymentId ||
+      paymentResult.status !== "pending" ||
+      !enrollmentDetails?.nationalId
+    ) {
+      return;
+    }
+
+    try {
+      const res = await checkRegistrationPaymentStatus(
+        paymentResult.paymentId,
+        enrollmentDetails.nationalId,
+      );
+      if (res.status === "paid" || res.status === "failed") {
+        if (res.status === "paid") {
+          await refreshRequirements(enrollmentDetails.nationalId);
+          markPaymentSuccess();
+        } else {
+          setPaymentResult((prev) =>
+            prev ? { ...prev, status: "failed" } : prev,
+          );
+        }
+      }
+    } catch {
+      /* keep polling */
+    }
+  }, [
+    enrollmentDetails?.nationalId,
+    markPaymentSuccess,
+    paymentResult,
+    refreshRequirements,
+  ]);
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -113,7 +175,15 @@ export const RegisterForm = ({ nationalId }: { nationalId: string }) => {
         }
 
         try {
-          await refreshRequirements(res.data.nationalId);
+          const req = await refreshRequirements(res.data.nationalId);
+          try {
+            const hadPending = sessionStorage.getItem(REG_PAYMENT_PENDING_KEY);
+            if (hadPending && req.paymentSatisfied) {
+              markPaymentSuccess();
+            }
+          } catch {
+            /* ignore storage */
+          }
         } catch {
           setFetchError("Could not load registration fee requirements.");
           return;
@@ -128,7 +198,7 @@ export const RegisterForm = ({ nationalId }: { nationalId: string }) => {
     if (nationalId) {
       fetchDetails();
     }
-  }, [nationalId, refreshRequirements, setValue]);
+  }, [nationalId, markPaymentSuccess, refreshRequirements, setValue]);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | undefined;
@@ -138,30 +208,26 @@ export const RegisterForm = ({ nationalId }: { nationalId: string }) => {
       paymentResult.status === "pending" &&
       enrollmentDetails?.nationalId
     ) {
-      interval = setInterval(async () => {
-        try {
-          const res = await checkRegistrationPaymentStatus(
-            paymentResult.paymentId,
-            enrollmentDetails.nationalId,
-          );
-          if (res.status === "paid" || res.status === "failed") {
-            setPaymentResult((prev) =>
-              prev ? { ...prev, status: res.status } : prev,
-            );
-            if (res.status === "paid") {
-              await refreshRequirements(enrollmentDetails.nationalId);
-            }
-          }
-        } catch {
-          /* keep polling */
-        }
-      }, 5000);
+      void pollPaymentStatus();
+      interval = setInterval(() => {
+        void pollPaymentStatus();
+      }, 3000);
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [paymentResult, enrollmentDetails, refreshRequirements]);
+  }, [paymentResult, enrollmentDetails?.nationalId, pollPaymentStatus]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        void pollPaymentStatus();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [pollPaymentStatus]);
 
   const handlePayFees = async () => {
     if (!enrollmentDetails?.nationalId || !requirements) return;
@@ -182,12 +248,20 @@ export const RegisterForm = ({ nationalId }: { nationalId: string }) => {
         window.open(res.redirectUrl, "_blank");
       }
 
+      try {
+        sessionStorage.setItem(REG_PAYMENT_PENDING_KEY, res.paymentId);
+      } catch {
+        /* ignore */
+      }
+
       setPaymentResult({
         paymentId: res.paymentId,
         status: "pending",
         redirectUrl: res.redirectUrl,
         instructions: res.instructions,
       });
+      setPaymentModalOpen(true);
+      setPaymentSuccessVisible(false);
     } catch (error: any) {
       alert(
         error.response?.data?.error ||
@@ -275,7 +349,120 @@ export const RegisterForm = ({ nationalId }: { nationalId: string }) => {
     );
   }
 
+  const paymentModalActive =
+    paymentModalOpen &&
+    (paymentSuccessVisible ||
+      paymentResult?.status === "pending" ||
+      paymentResult?.status === "failed");
+
   return (
+    <>
+      {paymentModalActive && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/55 p-4 backdrop-blur-sm animate-in fade-in duration-200">
+          <div
+            className="relative w-full max-w-md rounded-3xl border border-gray-100 bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-300"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="registration-payment-dialog-title"
+          >
+            {!paymentSuccessVisible &&
+              paymentResult?.status === "pending" && (
+                <button
+                  type="button"
+                  aria-label="Close payment window"
+                  className="absolute right-4 top-4 rounded-full p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+                  onClick={() => {
+                    setPaymentModalOpen(false);
+                  }}
+                >
+                  <X size={20} />
+                </button>
+              )}
+
+            {paymentSuccessVisible ? (
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary animate-in zoom-in duration-500">
+                  <CheckCircle2 className="h-10 w-10" strokeWidth={2.25} />
+                </div>
+                <h2
+                  id="registration-payment-dialog-title"
+                  className="text-2xl font-bold text-gray-900"
+                >
+                  Payment successful
+                </h2>
+                <p className="mt-3 text-sm leading-relaxed text-gray-600">
+                  Your registration fees have been received. You can now create
+                  your student account below.
+                </p>
+                <button
+                  type="button"
+                  className="mt-8 w-full rounded-xl bg-primary py-3.5 px-6 font-bold text-white shadow-lg transition hover:bg-primary/90"
+                  onClick={closePaymentSuccess}
+                >
+                  Continue to register
+                </button>
+              </div>
+            ) : paymentResult?.status === "failed" ? (
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-secondary/10 text-secondary">
+                  <AlertCircle className="h-10 w-10" />
+                </div>
+                <h2
+                  id="registration-payment-dialog-title"
+                  className="text-xl font-bold text-gray-900"
+                >
+                  Payment not completed
+                </h2>
+                <p className="mt-3 text-sm text-gray-600">
+                  The payment was cancelled or failed. You can try again when
+                  you&apos;re ready.
+                </p>
+                <button
+                  type="button"
+                  className="mt-8 w-full rounded-xl border-2 border-gray-200 py-3 font-bold text-gray-800 hover:bg-gray-50"
+                  onClick={() => {
+                    setPaymentResult(null);
+                    setPaymentModalOpen(false);
+                  }}
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                  <Loader2 className="h-10 w-10 animate-spin" />
+                </div>
+                <h2
+                  id="registration-payment-dialog-title"
+                  className="text-xl font-bold text-gray-900"
+                >
+                  Waiting for payment
+                </h2>
+                <p className="mt-3 text-sm leading-relaxed text-gray-600">
+                  {paymentResult?.instructions ||
+                    "Complete payment in the Paynow window. This page will update automatically when payment is confirmed."}
+                </p>
+                {paymentResult?.redirectUrl && (
+                  <a
+                    className="mt-4 text-sm font-semibold text-primary underline-offset-2 hover:underline"
+                    href={paymentResult.redirectUrl}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    Re-open payment page
+                  </a>
+                )}
+                <p className="mt-6 text-xs text-gray-500">
+                  Do not close this dialog until you see confirmation, or check
+                  back after paying.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
     <div className="w-full max-w-lg shadow-2xl p-8 bg-white rounded-3xl border border-gray-100 animate-in fade-in zoom-in duration-300">
       <div className="flex flex-col gap-4 pb-4 items-center text-center">
         <img
@@ -388,11 +575,14 @@ export const RegisterForm = ({ nationalId }: { nationalId: string }) => {
                   ? "Starting payment…"
                   : `Pay ${currency} ${amountDue.toFixed(2)}`}
               </button>
-              {paymentResult?.status === "pending" && (
-                <p className="text-xs text-center text-gray-500">
-                  {paymentResult.instructions ||
-                    "Complete payment in the opened window. We will confirm automatically."}
-                </p>
+              {paymentResult?.status === "pending" && !paymentModalOpen && (
+                <button
+                  type="button"
+                  className="w-full text-xs font-semibold text-primary underline-offset-2 hover:underline"
+                  onClick={() => setPaymentModalOpen(true)}
+                >
+                  View payment status
+                </button>
               )}
               {paymentResult?.status === "failed" && (
                 <p className="text-xs text-center text-secondary font-medium">
@@ -411,7 +601,11 @@ export const RegisterForm = ({ nationalId }: { nationalId: string }) => {
         </div>
       )}
 
-      <form className="flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)}>
+      <form
+        id="registration-account-form"
+        className="flex flex-col gap-5 scroll-mt-6"
+        onSubmit={handleSubmit(onSubmit)}
+      >
         {!paymentSatisfied && requirements && requirements.totalBilled > 0 && (
           <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
             <Lock size={18} />
@@ -473,5 +667,6 @@ export const RegisterForm = ({ nationalId }: { nationalId: string }) => {
         </button>
       </form>
     </div>
+    </>
   );
 };
