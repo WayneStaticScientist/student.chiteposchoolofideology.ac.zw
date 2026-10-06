@@ -13,7 +13,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import { getStudentDashboard, getStudentSchedules } from "@/services/api";
+import { AttendanceHeatmap } from "@/components/attendance/AttendanceHeatmap";
+import {
+  getMyAttendanceHeatmap,
+  getStudentDashboard,
+  getStudentSchedules,
+} from "@/services/api";
 
 interface DashboardData {
   user: {
@@ -46,16 +51,25 @@ export default function DashboardPage() {
   const [liveSchedules, setLiveSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [heatmapDays, setHeatmapDays] = useState<{ date: string; count: number }[]>(
+    [],
+  );
+  const heatmapYear = new Date().getFullYear();
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const [res, schedulesRes] = await Promise.all([
+        const [res, schedulesRes, heatmapRes] = await Promise.all([
           getStudentDashboard(),
           getStudentSchedules(),
+          getMyAttendanceHeatmap({
+            from: `${heatmapYear}-01-01`,
+            to: `${heatmapYear}-12-31`,
+          }).catch(() => ({ data: { days: [] } })),
         ]);
 
         setData(res);
+        setHeatmapDays(heatmapRes.data?.days ?? []);
         setLiveSchedules(
           schedulesRes.schedules?.filter(
             (s: any) => s.status !== "completed",
@@ -216,6 +230,13 @@ export default function DashboardPage() {
             </div>
           </div>
         </section>
+
+        <AttendanceHeatmap
+          days={heatmapDays}
+          year={heatmapYear}
+          subtitle="Live sessions you attended (GitHub-style calendar). Darker green = more sessions that day."
+          title="Attendance log"
+        />
 
         <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {[

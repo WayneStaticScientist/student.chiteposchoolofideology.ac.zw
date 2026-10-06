@@ -219,4 +219,23 @@ export const logout = async () => {
   return response.data;
 };
 
+export const sendLiveAttendanceHeartbeat = async (
+  scheduleId: string,
+  seconds = 30,
+) => {
+  const response = await api.post(`/attendance/live/${scheduleId}/heartbeat`, {
+    seconds,
+  });
+  return response.data;
+};
+
+export const getMyAttendanceHeatmap = async (params?: {
+  courseId?: string;
+  from?: string;
+  to?: string;
+}) => {
+  const response = await api.get("/attendance/me/heatmap", { params });
+  return response.data;
+};
+
 export default api;

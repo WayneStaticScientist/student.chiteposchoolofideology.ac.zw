@@ -16,6 +16,7 @@ import { StudioControlBar } from "./StudioControlBar";
 import { ChatChannel } from "./ChatChannel";
 import { ParticipantsPanel } from "./ParticipantsPanel";
 import { ConfirmModal } from "./ConfirmModal";
+import { LiveAttendanceTracker } from "@/components/attendance/LiveAttendanceTracker";
 
 interface ZoomStudioProps {
   courseId: string;
@@ -428,6 +429,10 @@ export const ZoomStudio: React.FC<ZoomStudioProps> = ({
         onCancel={() => setModalConfig((prev) => ({ ...prev, isOpen: false }))}
         onConfirm={() => modalConfig.action()}
       />
+
+      {!isHost && scheduleId ? (
+        <LiveAttendanceTracker enabled scheduleId={scheduleId} />
+      ) : null}
     </div>
   );
 };
