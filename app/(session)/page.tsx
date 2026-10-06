@@ -234,7 +234,7 @@ export default function DashboardPage() {
         <AttendanceHeatmap
           days={heatmapDays}
           year={heatmapYear}
-          subtitle="Live sessions you attended (GitHub-style calendar). Darker green = more sessions that day."
+          subtitle="Live sessions you attended. Darker green means more sessions that day."
           title="Attendance log"
         />
 
